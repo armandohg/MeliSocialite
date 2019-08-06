@@ -194,17 +194,19 @@ class MeliManager
      * @return mixed
      */
     public function execute($path, $opts = array(), $params = array()) {
-        $uri = $this->make_path($path, $params);
-        $ch = curl_init($uri);
-        curl_setopt_array($ch, self::$CURL_OPTS);
+        do {
+            $uri = $this->make_path($path, $params);
+            $ch = curl_init($uri);
+            curl_setopt_array($ch, self::$CURL_OPTS);
 
-        if(!empty($opts)) {
-            curl_setopt_array($ch, $opts);
-        }
+            if (!empty($opts)) {
+                curl_setopt_array($ch, $opts);
+            }
 
-        $return["body"] = json_decode(curl_exec($ch));
-        $return["httpCode"] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+            $return["body"] = json_decode(curl_exec($ch));
+            $return["httpCode"] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+        } while ($return["httpCode"] === 0);
 
         return $return;
     }

@@ -1,22 +1,27 @@
 {
-    "name": "kolovious/melisocialite",
-    "description": "Mercadolibre Laravel Socialite Integration",
-    "keywords": ["Laravel","Socialite","Mercadolibre"],
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Leonardo Garcia",
-            "email": "cololeo@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev",
-    "require": {      
-        "laravel/socialite": "4.*",
-        "illuminate/support": "7.*"
-    },
-    "autoload" : {
-        "psr-4": {
-            "Kolovious\\MeliSocialite\\": "src/"
-        }
+  "name": "kolovious/melisocialite",
+  "description": "Mercadolibre Laravel Socialite Integration",
+  "keywords": [
+    "Laravel",
+    "Socialite",
+    "Mercadolibre"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Leonardo Garcia",
+      "email": "cololeo@gmail.com"
     }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "laravel/socialite": "4.*",
+    "illuminate/support": "7.*",
+    "ext-curl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kolovious\\MeliSocialite\\": "src/"
+    }
+  }
 }

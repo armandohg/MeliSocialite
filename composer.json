@@ -17,7 +17,8 @@
   "require": {
     "laravel/socialite": "4.*",
     "illuminate/support": "7.*",
-    "ext-curl": "*"
+    "ext-curl": "*",
+    "ext-json": "*"
   },
   "autoload": {
     "psr-4": {

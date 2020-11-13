@@ -206,7 +206,7 @@ class MeliManager
             $return["body"] = json_decode(curl_exec($ch));
             $return["httpCode"] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-        } while ($return["httpCode"] === 0);
+        } while (in_array($return["httpCode"], [0, 500]));
 
         return $return;
     }

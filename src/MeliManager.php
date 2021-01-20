@@ -7,6 +7,7 @@
  */
 
 namespace Kolovious\MeliSocialite;
+
 use Illuminate\Support\Facades\Auth;
 
 
@@ -16,12 +17,11 @@ use Illuminate\Support\Facades\Auth;
  * This class is cut off of Meli Official SDK, we removed all the auth part, because we only need the API interaction here.
  * When the Meli Official SDK were available via Composer, we will change this
  */
-
 class MeliManager
 {
     public static $API_ROOT_URL = "https://api.mercadolibre.com";
-    public static $AUTH_URL     = "http://auth.mercadolibre.com/authorization";
-    public static $OAUTH_URL    = "/oauth/token";
+    public static $AUTH_URL = "http://auth.mercadolibre.com/authorization";
+    public static $OAUTH_URL = "/oauth/token";
 
     /**
      * Configuration for CURL
@@ -52,12 +52,13 @@ class MeliManager
      * @param string $access_token
      * @param string $refresh_token
      */
-    public function __construct($client_id, $client_secret, $access_token = null, $refresh_token = null) {
+    public function __construct($client_id, $client_secret, $access_token = null, $refresh_token = null)
+    {
         $this->client_id = $client_id;
         $this->client_secret = $client_secret;
         $this->access_token = $access_token;
         $this->refresh_token = $refresh_token;
-        $this->call_with_token=false;
+        $this->call_with_token = false;
     }
 
     /**
@@ -65,12 +66,13 @@ class MeliManager
      *
      * @return string|mixed
      */
-    public function refreshAccessToken() {
+    public function refreshAccessToken()
+    {
 
-        if($this->refresh_token) {
+        if ($this->refresh_token) {
             $body = array(
-                "grant_type"    => "refresh_token",
-                "client_id"     => $this->client_id,
+                "grant_type" => "refresh_token",
+                "client_id" => $this->client_id,
                 "client_secret" => $this->client_secret,
                 "refresh_token" => $this->refresh_token
             );
@@ -85,10 +87,10 @@ class MeliManager
             $this->call_with_token = false;
             $request = $this->execute(self::$OAUTH_URL, $opts);
 
-            if($request["httpCode"] == 200) {
+            if ($request["httpCode"] == 200) {
                 $this->access_token = $request["body"]->access_token;
 
-                if($request["body"]->refresh_token)
+                if ($request["body"]->refresh_token)
                     $this->refresh_token = $request["body"]->refresh_token;
 
                 return $request;
@@ -99,7 +101,7 @@ class MeliManager
         } else {
             $result = array(
                 'error' => 'Offline-Access is not allowed.',
-                'httpCode'  => null
+                'httpCode' => null
             );
             return $result;
         }
@@ -113,10 +115,12 @@ class MeliManager
      * @param array $params
      * @return mixed
      */
-    public function get($path, $params = null) {
+    public function get($path, $params = null)
+    {
         $exec = $this->execute($path, null, $params);
         return $exec;
     }
+
     /**
      * Execute a POST Request
      *
@@ -124,7 +128,8 @@ class MeliManager
      * @param array $params
      * @return mixed
      */
-    public function post($path, $body = null, $params = array()) {
+    public function post($path, $body = null, $params = array())
+    {
         $body = json_encode($body);
         $opts = array(
             CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
@@ -135,6 +140,7 @@ class MeliManager
         $exec = $this->execute($path, $opts, $params);
         return $exec;
     }
+
     /**
      * Execute a PUT Request
      *
@@ -143,7 +149,8 @@ class MeliManager
      * @param array $params
      * @return mixed
      */
-    public function put($path, $body = null, $params) {
+    public function put($path, $body = null, $params)
+    {
         $body = json_encode($body);
         $opts = array(
             CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
@@ -154,6 +161,7 @@ class MeliManager
         $exec = $this->execute($path, $opts, $params);
         return $exec;
     }
+
     /**
      * Execute a DELETE Request
      *
@@ -161,7 +169,8 @@ class MeliManager
      * @param array $params
      * @return mixed
      */
-    public function delete($path, $params) {
+    public function delete($path, $params)
+    {
         $opts = array(
             CURLOPT_CUSTOMREQUEST => "DELETE"
         );
@@ -170,6 +179,7 @@ class MeliManager
 
         return $exec;
     }
+
     /**
      * Execute a OPTION Request
      *
@@ -177,7 +187,8 @@ class MeliManager
      * @param array $params
      * @return mixed
      */
-    public function options($path, $params = null) {
+    public function options($path, $params = null)
+    {
         $opts = array(
             CURLOPT_CUSTOMREQUEST => "OPTIONS"
         );
@@ -185,6 +196,7 @@ class MeliManager
         $exec = $this->execute($path, $opts, $params);
         return $exec;
     }
+
     /**
      * Execute all requests and returns the json body and headers
      *
@@ -193,12 +205,29 @@ class MeliManager
      * @param array $params
      * @return mixed
      */
-    public function execute($path, $opts = array(), $params = array()) {
+    public function execute($path, $opts = array(), $params = array())
+    {
+        $return = null;
+        $max_retries = 10;
+        $retries = 0;
         do {
+            if ($retries > 0) {
+                logger()->channel('meli')->error('[PID: ' . getmypid() . '] Meli result error:', [
+                    'retry' => $retries,
+                    'return' => $return,
+                ]);
+
+                sleep(1); // Wait 2 seconds before retrying
+            }
+
             $uri = $this->make_path($path, $params);
             $ch = curl_init($uri);
             curl_setopt_array($ch, self::$CURL_OPTS);
-
+            logger()->channel('meli')->debug('[PID: ' . getmypid() . '] Meli URL:', [
+                'post' => $opts[CURLOPT_POST] ?? false,
+                'url' => $uri,
+                'params' => $params
+            ]);
             if (!empty($opts)) {
                 curl_setopt_array($ch, $opts);
             }
@@ -206,7 +235,9 @@ class MeliManager
             $return["body"] = json_decode(curl_exec($ch));
             $return["httpCode"] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-        } while (in_array($return["httpCode"], [0, 409, 500]));
+            logger()->channel('meli')->debug('[PID: ' . getmypid() . '] Meli result:', ['result' => $return]);
+            $retries++;
+        } while (in_array($return["httpCode"], [0, 409, 500]) && $retries <= $max_retries);
 
         return $return;
     }
@@ -217,13 +248,13 @@ class MeliManager
      * @param string|null $token We can sent the token to set it up in the object for future calls.
      * @return $this MeliManager
      */
-    public function withToken($token=null)
+    public function withToken($token = null)
     {
-        if($token) {
+        if ($token) {
             $this->access_token = $token;
         }
 
-        $this->call_with_token=true;
+        $this->call_with_token = true;
         return $this;
     }
 
@@ -255,28 +286,29 @@ class MeliManager
      * @param array $params
      * @return string
      */
-    public function make_path($path, $params = array()) {
+    public function make_path($path, $params = array())
+    {
         if (!preg_match("/^http/", $path)) {
             if (!preg_match("/^\//", $path)) {
-                $path = '/'.$path;
+                $path = '/' . $path;
             }
-            $uri = self::$API_ROOT_URL.$path;
+            $uri = self::$API_ROOT_URL . $path;
         } else {
             $uri = $path;
         }
         // FIX: If access_token is set, and we have the flag to call withToken, first, we send as a param the access_token, then we set the flag to 0
-        if($this->access_token && $this->call_with_token) {
+        if ($this->access_token && $this->call_with_token) {
             $params['access_token'] = $this->access_token;
             $this->call_with_token = false;
         }
 
-        if(!empty($params)) {
+        if (!empty($params)) {
             $paramsJoined = array();
-            foreach($params as $param => $value) {
+            foreach ($params as $param => $value) {
                 $paramsJoined[] = "$param=$value";
             }
-            $params = '?'.implode('&', $paramsJoined);
-            $uri = $uri.$params;
+            $params = '?' . implode('&', $paramsJoined);
+            $uri = $uri . $params;
         }
         return $uri;
     }

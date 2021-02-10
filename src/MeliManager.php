@@ -237,7 +237,7 @@ class MeliManager
             curl_close($ch);
             logger()->channel('meli')->debug('[PID: ' . getmypid() . '] Meli result:', ['result' => $return]);
             $retries++;
-        } while (in_array($return["httpCode"], [0, 409, 500]) && $retries <= $max_retries);
+        } while (in_array($return["httpCode"], [0, 403, 409, 500]) && $retries <= $max_retries);
 
         return $return;
     }
